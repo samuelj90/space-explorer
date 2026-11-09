@@ -1,0 +1,184 @@
+{
+  "version": "1.0.0",
+  "project_artifacts": [
+    {
+      "name": "node_modules",
+      "category": "JavaScript / Node",
+      "desc": "Node.js dependencies (re-installable via npm/yarn/pnpm)",
+      "safe_to_delete": true,
+      "is_dir": true
+    },
+    {
+      "name": "target",
+      "category": "Rust / Java / Maven",
+      "desc": "Build output artifacts (re-generatable via cargo build / mvn compile)",
+      "safe_to_delete": true,
+      "is_dir": true
+    },
+    {
+      "name": ".venv",
+      "category": "Python",
+      "desc": "Python virtual environment (re-creatable via venv/poetry/uv)",
+      "safe_to_delete": true,
+      "is_dir": true
+    },
+    {
+      "name": "venv",
+      "category": "Python",
+      "desc": "Python virtual environment",
+      "safe_to_delete": true,
+      "is_dir": true
+    },
+    {
+      "name": "__pycache__",
+      "category": "Python",
+      "desc": "Python compiled bytecode cache",
+      "safe_to_delete": true,
+      "is_dir": true
+    },
+    {
+      "name": ".pytest_cache",
+      "category": "Python",
+      "desc": "Pytest temporary cache",
+      "safe_to_delete": true,
+      "is_dir": true
+    },
+    {
+      "name": ".next",
+      "category": "Next.js",
+      "desc": "Next.js build cache and output",
+      "safe_to_delete": true,
+      "is_dir": true
+    },
+    {
+      "name": ".nuxt",
+      "category": "Nuxt.js",
+      "desc": "Nuxt.js build cache and output",
+      "safe_to_delete": true,
+      "is_dir": true
+    },
+    {
+      "name": "dist",
+      "category": "Build Output",
+      "desc": "Bundled distribution artifacts",
+      "safe_to_delete": true,
+      "is_dir": true
+    },
+    {
+      "name": "build",
+      "category": "Build Output",
+      "desc": "Build intermediate and final outputs",
+      "safe_to_delete": true,
+      "is_dir": true
+    },
+    {
+      "name": ".build",
+      "category": "Swift / SPM",
+      "desc": "Swift Package Manager build output",
+      "safe_to_delete": true,
+      "is_dir": true
+    },
+    {
+      "name": "Pods",
+      "category": "iOS / CocoaPods",
+      "desc": "CocoaPods dependencies directory",
+      "safe_to_delete": true,
+      "is_dir": true
+    },
+    {
+      "name": ".gradle",
+      "category": "Java / Android",
+      "desc": "Gradle cache and build state",
+      "safe_to_delete": true,
+      "is_dir": true
+    },
+    {
+      "name": ".turbo",
+      "category": "Turborepo",
+      "desc": "Turborepo local cache",
+      "safe_to_delete": true,
+      "is_dir": true
+    },
+    {
+      "name": ".parcel-cache",
+      "category": "Parcel",
+      "desc": "Parcel bundler cache",
+      "safe_to_delete": true,
+      "is_dir": true
+    },
+    {
+      "name": ".angular",
+      "category": "Angular",
+      "desc": "Angular CLI cache",
+      "safe_to_delete": true,
+      "is_dir": true
+    }
+  ],
+  "package_caches": [
+    {
+      "id": "npm",
+      "name": "NPM Cache",
+      "category": "JavaScript / Node",
+      "desc": "Global tarball cache of downloaded npm packages.",
+      "path": "~/.npm",
+      "clean_cmd": ["npm", "cache", "clean", "--force"],
+      "safe": true
+    },
+    {
+      "id": "yarn",
+      "name": "Yarn Cache",
+      "category": "JavaScript / Node",
+      "desc": "Downloaded yarn packages cache.",
+      "path": "~/Library/Caches/Yarn",
+      "clean_cmd": ["yarn", "cache", "clean"],
+      "safe": true
+    },
+    {
+      "id": "homebrew",
+      "name": "Homebrew Cache",
+      "category": "Package Manager",
+      "desc": "Downloaded formula & bottle tarballs.",
+      "path": "~/Library/Caches/Homebrew",
+      "clean_cmd": ["brew", "cleanup", "--prune=all"],
+      "safe": true,
+      "platform_only": "Darwin"
+    },
+    {
+      "id": "cargo",
+      "name": "Cargo Registry Cache",
+      "category": "Rust",
+      "desc": "Downloaded crates.io .crate tarballs.",
+      "path": "~/.cargo/registry/cache",
+      "clean_cmd": null,
+      "safe": true
+    },
+    {
+      "id": "pip",
+      "name": "Pip Cache",
+      "category": "Python",
+      "desc": "Downloaded wheels and source tarballs.",
+      "path": "~/Library/Caches/pip",
+      "clean_cmd": ["pip", "cache", "purge"],
+      "safe": true
+    },
+    {
+      "id": "gradle",
+      "name": "Gradle Cache",
+      "category": "Java / Android",
+      "desc": "Downloaded jars and build transforms.",
+      "path": "~/.gradle/caches",
+      "clean_cmd": null,
+      "safe": true
+    },
+    {
+      "id": "simulators",
+      "name": "iOS Simulators",
+      "category": "Apple Developer",
+      "desc": "Erases cached states of inactive iOS simulator devices.",
+      "path": "~/Library/Developer/CoreSimulator/Devices",
+      "clean_cmd": ["xcrun", "simctl", "erase", "all"],
+      "safe": true,
+      "platform_only": "Darwin"
+    }
+  ]
+}

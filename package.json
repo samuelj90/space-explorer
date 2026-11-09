@@ -1,0 +1,14 @@
+{
+  "name": "space-explorer",
+  "version": "1.0.0",
+  "description": "Cross-platform disk space analyzer and expendable artifact cleanup dashboard",
+  "main": "electron-main.js",
+  "scripts": {
+    "start:web": "python3 server/app.py 3888",
+    "start": "electron .",
+    "scan": "python3 bin/scan.py .",
+    "clean:dry": "python3 bin/clean.py --dry-run"
+  },
+  "keywords": ["disk-space", "analyzer", "cleanup", "developer-tools", "cross-platform", "electron"],
+  "license": "MIT"
+}

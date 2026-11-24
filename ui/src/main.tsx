@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import brandIcon from '../../docs/space-explorer.svg?no-inline';
 import { Caches } from './Caches';
 import { Dialog } from './Dialog';
 import { Icon } from './Icon';
@@ -93,7 +94,7 @@ function App() {
 
   return <div className="app-shell">
     <header className="header">
-      <div className="brand"><div className="brand-mark"><Icon name="orbit" /></div><div><h1>Space Explorer</h1><p>STORAGE INTELLIGENCE</p></div></div>
+      <div className="brand"><img className="brand-mark" src={brandIcon} alt="" /><div><h1>Space Explorer</h1><p>STORAGE INTELLIGENCE</p></div></div>
       <div className="flex flex-wrap items-center gap-3">
         <label className="sr-only" htmlFor="theme">Theme</label>
         <select id="theme" className="field" value={theme} disabled={!themeReady} onChange={(event) => {

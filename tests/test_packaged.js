@@ -59,8 +59,15 @@ test('packaged Electron starts without system Python and persists its theme', { 
   fs.writeFileSync(path.join(workspace, 'demo', 'node_modules', 'fixture.txt'), 'fixture');
   let application;
   try {
+    const resources = process.platform === 'darwin'
+      ? path.resolve(path.dirname(process.env.SPACE_TEST_PACKAGED_EXE), '..', 'Resources')
+      : path.join(path.dirname(process.env.SPACE_TEST_PACKAGED_EXE), 'resources');
+    assert.deepEqual(fs.readFileSync(path.join(resources, 'branding', 'icon.png')), fs.readFileSync(path.join(__dirname, '..', 'build', 'icon.png')));
     application = await openPackaged(temp);
     await application.page.getByText('demo', { exact: true }).waitFor({ timeout: 30000 });
+    const favicon = await application.page.locator('link[rel="icon"]').getAttribute('href');
+    assert.equal((await application.page.request.get(new URL(favicon, application.page.url()).href)).ok(), true);
+    assert.equal(await application.page.locator('.brand-mark').evaluate((image) => image.complete && image.naturalWidth > 0), true);
     const info = await application.page.evaluate(async () => (await fetch('/api/info')).json());
     assert.equal(info.workspace, workspace);
     assert.equal((await application.page.locator('main').innerText()).includes(workspace), false);

@@ -50,6 +50,8 @@ On macOS, run `npm ci` followed by `npm run build:mac:arm64` for Apple Silicon o
 
 The build downloads a pinned, SHA-256-verified [python-build-standalone](https://github.com/astral-sh/python-build-standalone) distribution for the target platform. Its Python license is included in the packaged runtime. Output files are generated in `dist/`; the app does not download Python at runtime.
 
+The shared brand artwork is `docs/space-explorer.svg`. The UI build renders it to `build/icon.png`, which electron-builder converts into the application and installer icons.
+
 Packaged desktop mode scans the `Space Explorer Workspace` directory under the user's application-data directory (for example `%APPDATA%\Space Explorer Workspace` on Windows). It does not scan projects stored elsewhere. Package and system cache scanning remains separate. Custom rules continue to be stored at `~/.space-explorer-rules.json`.
 
 ### Rules Configuration

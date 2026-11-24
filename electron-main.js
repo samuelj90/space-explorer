@@ -27,6 +27,9 @@ async function createWindow() {
     height: 800,
     show: process.env.SPACE_EXPLORER_TEST_HIDDEN !== '1',
     title: 'Space Explorer',
+    icon: app.isPackaged
+      ? path.join(process.resourcesPath, 'branding', 'icon.png')
+      : path.join(__dirname, 'build', 'icon.png'),
     backgroundColor: '#0d1117',
     webPreferences: {
       nodeIntegration: false,

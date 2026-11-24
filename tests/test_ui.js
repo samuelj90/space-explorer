@@ -36,6 +36,13 @@ test('dashboard workflows, themes, and responsive layout', { skip: !process.env.
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(`http://127.0.0.1:${port}`);
     await page.getByText('demo', { exact: true }).waitFor();
+    const favicon = await page.locator('link[rel="icon"]').getAttribute('href');
+    const brand = page.locator('.brand-mark');
+    assert.equal(await brand.getAttribute('src'), new URL(favicon, page.url()).href);
+    assert.equal(await brand.evaluate((image) => image.complete && image.naturalWidth > 0), true);
+    const iconResponse = await page.request.get(new URL(favicon, page.url()).href);
+    assert.equal(iconResponse.ok(), true);
+    assert.equal(await iconResponse.text(), fs.readFileSync(path.join(root, 'docs', 'space-explorer.svg'), 'utf8'));
     assert.equal((await page.locator('main').innerText()).includes(workspace), false);
     assert.doesNotMatch(await page.locator('body').innerText(), /\bworkspace\b/i);
     await page.getByRole('button', { name: /Scan everything/i }).waitFor();

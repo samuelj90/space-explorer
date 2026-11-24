@@ -4,7 +4,7 @@
   "description": "Cross-platform disk space analyzer and expendable artifact cleanup dashboard",
   "main": "electron-main.js",
   "scripts": {
-    "build:ui": "tsc --noEmit && vite build",
+    "build:ui": "node scripts/prepare-icon.cjs && tsc --noEmit && vite build",
     "prestart:web": "npm run build:ui",
     "start:web": "python3 server/app.py 3888",
     "prestart": "npm run build:ui",
@@ -33,6 +33,7 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",
@@ -48,6 +49,7 @@
   "build": {
     "appId": "com.samuelj90.space-explorer",
     "productName": "Space Explorer",
+    "icon": "build/icon.png",
     "directories": {
       "output": "dist"
     },
@@ -62,6 +64,10 @@
     ],
     "asar": true,
     "extraResources": [
+      {
+        "from": "build/icon.png",
+        "to": "branding/icon.png"
+      },
       {
         "from": ".runtime/python",
         "to": "python",

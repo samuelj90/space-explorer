@@ -1,6 +1,6 @@
 {
   "name": "space-explorer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Cross-platform disk space analyzer and expendable artifact cleanup dashboard",
   "main": "electron-main.js",
   "scripts": {

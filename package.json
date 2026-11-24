@@ -8,9 +8,9 @@
     "start": "electron .",
     "scan": "python3 bin/scan.py .",
     "clean:dry": "python3 bin/clean.py --dry-run",
-    "build:win": "electron-builder --win",
+    "build:win": "electron-builder --win --publish never",
     "pack": "electron-builder --dir",
-    "build": "electron-builder"
+    "build": "electron-builder --publish never"
   },
   "keywords": [
     "disk-space",

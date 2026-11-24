@@ -58,10 +58,23 @@ jobs:
           python-version: '3.11'
 
       - name: Install Node Dependencies
-        run: npm install
+        run: npm ci
+
+      - name: Test UI and startup
+        shell: pwsh
+        run: |
+          npm run build:ui
+          $env:SPACE_TEST_BROWSER = "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe"
+          node --test tests/test_backend.js tests/test_ui.js
 
       - name: Build Windows Desktop App
         run: npm run build:win
+
+      - name: Smoke-test packaged app without system Python
+        shell: pwsh
+        run: |
+          $env:SPACE_TEST_PACKAGED_EXE = "$pwd\dist\win-unpacked\Space Explorer.exe"
+          node --test tests/test_packaged.js
 
       - name: Verify Windows Build Output
         shell: bash
@@ -76,6 +89,40 @@ jobs:
           name: space-explorer-windows-app
           path: |
             dist/*.exe
+            dist/*.zip
+          if-no-files-found: error
+          retention-days: 14
+
+  build-macos:
+    name: Build macOS ${{ matrix.arch }} Application
+    runs-on: ${{ matrix.os }}
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15-intel
+            arch: x64
+          - os: macos-15
+            arch: arm64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npm run build:mac:${{ matrix.arch }}
+      - name: Smoke-test packaged app without system Python
+        shell: bash
+        run: |
+          export SPACE_TEST_PACKAGED_EXE="$(find "$PWD/dist" -path '*/Contents/MacOS/Space Explorer' -type f -print -quit)"
+          test -n "$SPACE_TEST_PACKAGED_EXE"
+          node --test tests/test_packaged.js
+      - uses: actions/upload-artifact@v4
+        with:
+          name: space-explorer-macos-${{ matrix.arch }}
+          path: |
+            dist/*.dmg
             dist/*.zip
           if-no-files-found: error
           retention-days: 14

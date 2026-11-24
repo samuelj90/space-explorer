@@ -11,6 +11,12 @@ sys.path.insert(0, str(ROOT_DIR))
 from lib.scanner import scan_workspace
 from lib.cleaner import delete_target
 from lib.cache_cleaners import scan_caches, clean_cache
+from lib.rules import (
+    get_rules_overview,
+    add_custom_artifact_rule,
+    delete_custom_artifact_rule,
+    save_user_rules,
+)
 
 UI_DIR = ROOT_DIR / "ui"
 DEFAULT_WORKSPACE = ROOT_DIR.parent.resolve()
@@ -66,6 +72,14 @@ class SpaceExplorerHandler(SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(data).encode("utf-8"))
             return
 
+        if parsed.path == "/api/rules":
+            overview = get_rules_overview()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(overview).encode("utf-8"))
+            return
+
         return super().do_GET()
 
     def do_POST(self):
@@ -79,6 +93,54 @@ class SpaceExplorerHandler(SimpleHTTPRequestHandler):
         length = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(length).decode("utf-8")
         data = json.loads(body or "{}")
+
+        if parsed.path == "/api/rules":
+            action = data.get("action", "")
+            if action == "add_artifact":
+                rule_data = data.get("rule", {})
+                try:
+                    new_rule = add_custom_artifact_rule(rule_data)
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json")
+                    self.end_headers()
+                    self.wfile.write(
+                        json.dumps(
+                            {"success": True, "rule": new_rule, "overview": get_rules_overview()}
+                        ).encode("utf-8")
+                    )
+                except Exception as e:
+                    self.send_response(400)
+                    self.send_header("Content-Type", "application/json")
+                    self.end_headers()
+                    self.wfile.write(
+                        json.dumps({"success": False, "error": str(e)}).encode("utf-8")
+                    )
+                return
+
+            if action == "delete_artifact":
+                name = data.get("name", "")
+                deleted = delete_custom_artifact_rule(name)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(
+                    json.dumps({"success": deleted, "overview": get_rules_overview()}).encode("utf-8")
+                )
+                return
+
+            if action == "save_all_user_rules":
+                user_rules = data.get("user_rules", {})
+                saved = save_user_rules(user_rules)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(
+                    json.dumps({"success": saved, "overview": get_rules_overview()}).encode("utf-8")
+                )
+                return
+
+            self.send_error(400, "Invalid action for /api/rules")
+            return
 
         if parsed.path == "/api/clean":
             targets = data.get("targets", [])

@@ -1,5 +1,6 @@
 let scannedProjects = [];
 let scannedCaches = [];
+let loadedRules = { project_artifacts: [], package_caches: [], custom_rules_path: '' };
 let selectedProjectPaths = new Set();
 let selectedCacheIds = new Set();
 let workspaceInfo = null;
@@ -15,10 +16,20 @@ function formatBytes(bytes) {
 
 function switchTab(tab) {
   const isProjects = tab === 'projects';
+  const isCaches = tab === 'caches';
+  const isRules = tab === 'rules';
+
   document.getElementById('view-projects').style.display = isProjects ? 'block' : 'none';
-  document.getElementById('view-caches').style.display = isProjects ? 'none' : 'block';
+  document.getElementById('view-caches').style.display = isCaches ? 'block' : 'none';
+  document.getElementById('view-rules').style.display = isRules ? 'block' : 'none';
+
   document.getElementById('tab-btn-projects').classList.toggle('active', isProjects);
-  document.getElementById('tab-btn-caches').classList.toggle('active', !isProjects);
+  document.getElementById('tab-btn-caches').classList.toggle('active', isCaches);
+  document.getElementById('tab-btn-rules').classList.toggle('active', isRules);
+
+  if (isRules && loadedRules.project_artifacts.length === 0) {
+    loadRules();
+  }
 }
 
 async function loadSystemInfo() {
@@ -94,7 +105,7 @@ async function refreshAll() {
   btn.disabled = true;
   btn.innerText = 'Scanning...';
   try {
-    await Promise.all([loadSystemInfo(), loadCaches(), startProjectScan()]);
+    await Promise.all([loadSystemInfo(), loadCaches(), loadRules(), startProjectScan()]);
   } finally {
     btn.disabled = false;
     btn.innerText = '🔄 Scan Everything';
@@ -386,6 +397,206 @@ async function executeClean() {
   } finally {
     btn.disabled = false;
     btn.innerText = 'Clean Now';
+  }
+}
+
+// Toast notification helper
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `<span>${type === 'success' ? '✅' : '⚠️'}</span> <span>${message}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(10px)';
+    setTimeout(() => toast.remove(), 200);
+  }, 3500);
+}
+
+// Rules Configuration Logic
+async function loadRules() {
+  try {
+    const res = await fetch('/api/rules');
+    if (!res.ok) throw new Error('Failed to fetch rules');
+    loadedRules = await res.json();
+    
+    const countElem = document.getElementById('tab-count-rules');
+    if (countElem) {
+      countElem.innerText = (loadedRules.project_artifacts || []).length;
+    }
+
+    const pathElem = document.getElementById('rules-path-label');
+    if (pathElem && loadedRules.custom_rules_path) {
+      pathElem.innerText = loadedRules.custom_rules_path;
+    }
+
+    renderRulesTable();
+  } catch (err) {
+    console.error('Failed to load rules:', err);
+    showToast('Failed to load rules configuration', 'error');
+  }
+}
+
+function renderRulesTable() {
+  const tbody = document.getElementById('rules-table-body');
+  if (!tbody) return;
+
+  const query = (document.getElementById('rules-search-input')?.value || '').toLowerCase().trim();
+  const sourceFilter = document.getElementById('rules-source-filter')?.value || 'all';
+
+  const artifacts = loadedRules.project_artifacts || [];
+  const filtered = artifacts.filter(r => {
+    if (sourceFilter === 'builtin' && r.is_custom) return false;
+    if (sourceFilter === 'custom' && !r.is_custom) return false;
+
+    if (!query) return true;
+    return (
+      r.name.toLowerCase().includes(query) ||
+      (r.category && r.category.toLowerCase().includes(query)) ||
+      (r.desc && r.desc.toLowerCase().includes(query))
+    );
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 30px; color: var(--text-muted);">No rules match your search filter.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(r => {
+    const isDir = r.is_dir !== false;
+    const typeLabel = isDir ? '📁 Directory' : '📄 File';
+    const safeBadge = r.safe_to_delete !== false 
+      ? `<span class="badge badge-safe">Safe</span>` 
+      : `<span class="badge badge-caution">Caution</span>`;
+    const sourceBadge = r.is_custom 
+      ? `<span class="badge badge-custom">Custom</span>` 
+      : `<span class="badge badge-builtin">Built-in</span>`;
+    
+    const actionHtml = r.is_custom
+      ? `<button class="btn btn-danger" style="padding: 4px 8px; font-size: 11px;" onclick="deleteCustomRule('${escapeHtml(r.name)}')">🗑️ Delete</button>`
+      : `<span style="color: var(--text-muted); font-size: 12px;">Default</span>`;
+
+    return `
+      <tr>
+        <td><strong style="font-family: var(--font-mono); color: var(--text);">${escapeHtml(r.name)}</strong></td>
+        <td><span class="artifact-badge" style="background: #21262d;">${escapeHtml(r.category || 'General')}</span></td>
+        <td style="color: var(--text-muted);">${escapeHtml(r.desc || '')}</td>
+        <td><span style="font-size: 12px; color: var(--text-muted);">${typeLabel}</span></td>
+        <td>${safeBadge}</td>
+        <td>${sourceBadge}</td>
+        <td style="text-align: right;">${actionHtml}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function openAddRuleModal() {
+  document.getElementById('rule-name-input').value = '';
+  document.getElementById('rule-category-input').value = 'Custom';
+  document.getElementById('rule-desc-input').value = '';
+  document.getElementById('rule-type-select').value = 'dir';
+  document.getElementById('rule-safe-checkbox').checked = true;
+  document.getElementById('rule-modal').style.display = 'flex';
+  document.getElementById('rule-name-input').focus();
+}
+
+function closeRuleModal() {
+  document.getElementById('rule-modal').style.display = 'none';
+}
+
+function applyPreset(name, category, desc, isDir, safe) {
+  openAddRuleModal();
+  document.getElementById('rule-name-input').value = name;
+  document.getElementById('rule-category-input').value = category;
+  document.getElementById('rule-desc-input').value = desc;
+  document.getElementById('rule-type-select').value = isDir ? 'dir' : 'file';
+  document.getElementById('rule-safe-checkbox').checked = safe;
+}
+
+async function submitCustomRule() {
+  const name = document.getElementById('rule-name-input').value.trim();
+  const category = document.getElementById('rule-category-input').value.trim() || 'Custom';
+  const desc = document.getElementById('rule-desc-input').value.trim();
+  const isDir = document.getElementById('rule-type-select').value === 'dir';
+  const safe = document.getElementById('rule-safe-checkbox').checked;
+
+  if (!name) {
+    alert('Please enter a rule pattern/name.');
+    return;
+  }
+
+  const saveBtn = document.getElementById('btn-save-rule');
+  saveBtn.disabled = true;
+  saveBtn.innerText = 'Saving...';
+
+  try {
+    const res = await fetch('/api/rules', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'add_artifact',
+        rule: {
+          name,
+          category,
+          desc,
+          is_dir: isDir,
+          safe_to_delete: safe
+        }
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to save rule');
+    }
+
+    closeRuleModal();
+    showToast(`Rule "${name}" saved! Rescan to apply.`);
+    await loadRules();
+  } catch (err) {
+    alert('Failed to save rule: ' + err.message);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerText = 'Save Rule';
+  }
+}
+
+async function deleteCustomRule(name) {
+  if (!confirm(`Are you sure you want to delete custom rule "${name}"?`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/rules', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'delete_artifact',
+        name
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to delete rule');
+    }
+
+    showToast(`Rule "${name}" removed`);
+    await loadRules();
+  } catch (err) {
+    alert('Failed to delete rule: ' + err.message);
   }
 }
 

@@ -50,6 +50,9 @@
       <button id="tab-btn-caches" class="tab-btn" onclick="switchTab('caches')">
         📦 Package & System Caches (<span id="tab-count-caches">0</span>)
       </button>
+      <button id="tab-btn-rules" class="tab-btn" onclick="switchTab('rules')">
+        ⚙️ Rules Configuration (<span id="tab-count-rules">0</span>)
+      </button>
     </div>
 
     <!-- TAB 1: PROJECTS VIEW -->
@@ -130,6 +133,119 @@
         </table>
       </div>
     </div>
+
+    <!-- TAB 3: RULES CONFIGURATION VIEW -->
+    <div id="view-rules" style="display: none;">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <input type="text" id="rules-search-input" class="search-input" placeholder="Search rules..." oninput="renderRulesTable()">
+          <select id="rules-source-filter" class="search-input" style="width: 140px;" onchange="renderRulesTable()">
+            <option value="all">All Sources</option>
+            <option value="builtin">Built-in Only</option>
+            <option value="custom">Custom Only</option>
+          </select>
+        </div>
+        <div class="toolbar-right">
+          <button id="btn-add-rule" class="btn btn-primary" onclick="openAddRuleModal()">
+            ➕ Add Custom Rule
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Preset Suggestions -->
+      <div class="preset-box">
+        <span class="preset-label">💡 Quick Add Presets:</span>
+        <div class="preset-chips" id="preset-chips">
+          <button class="chip" onclick="applyPreset('.turbo', 'Monorepo', 'Turborepo build cache', true, true)">+ .turbo</button>
+          <button class="chip" onclick="applyPreset('build', 'Build Output', 'Compiled artifacts folder', true, true)">+ build</button>
+          <button class="chip" onclick="applyPreset('coverage', 'Testing', 'Test coverage reports', true, true)">+ coverage</button>
+          <button class="chip" onclick="applyPreset('.parcel-cache', 'Bundler', 'Parcel compiler cache', true, true)">+ .parcel-cache</button>
+          <button class="chip" onclick="applyPreset('.gradle', 'Java / Android', 'Gradle project cache', true, true)">+ .gradle</button>
+          <button class="chip" onclick="applyPreset('.dart_tool', 'Flutter / Dart', 'Dart tooling and packages cache', true, true)">+ .dart_tool</button>
+          <button class="chip" onclick="applyPreset('tmp', 'General', 'Temporary artifacts directory', true, true)">+ tmp</button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Pattern / Name</th>
+              <th>Category</th>
+              <th>Description</th>
+              <th>Type</th>
+              <th>Safe to Delete</th>
+              <th>Source</th>
+              <th style="text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="rules-table-body">
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                Loading rules...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="rules-footer-note">
+        <span>Persistent storage: <code id="rules-path-label" class="code-path">~/.space-explorer-rules.json</code></span>
+        <span>•</span>
+        <span>Newly configured rules take effect on all subsequent workspace scans.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Custom Rule Modal -->
+  <div id="rule-modal" class="modal-overlay" style="display: none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="rule-modal-title">Add Custom Rule</h3>
+        <button class="btn" style="padding: 4px 8px;" onclick="closeRuleModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+          Define an expendable build artifact or temporary folder pattern to detect and clean.
+        </p>
+
+        <div class="form-group">
+          <label for="rule-name-input">Folder or File Name (Pattern):</label>
+          <input type="text" id="rule-name-input" class="form-control" placeholder="e.g. .cache, coverage, build" required>
+        </div>
+
+        <div class="form-group">
+          <label for="rule-category-input">Category:</label>
+          <input type="text" id="rule-category-input" class="form-control" placeholder="e.g. JavaScript, Python, Testing, Build" value="Custom">
+        </div>
+
+        <div class="form-group">
+          <label for="rule-desc-input">Description:</label>
+          <input type="text" id="rule-desc-input" class="form-control" placeholder="e.g. Temporary build cache created by compiler">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group" style="flex: 1;">
+            <label for="rule-type-select">Target Type:</label>
+            <select id="rule-type-select" class="form-control">
+              <option value="dir">Directory (Folder)</option>
+              <option value="file">File</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="flex: 1; display: flex; align-items: center; padding-top: 22px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="rule-safe-checkbox" checked>
+              <span>Safe to delete</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeRuleModal()">Cancel</button>
+        <button id="btn-save-rule" class="btn btn-primary" onclick="submitCustomRule()">Save Rule</button>
+      </div>
+    </div>
   </div>
 
   <!-- Confirmation Modal -->
@@ -154,6 +270,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
 
   <script src="app.js"></script>
 </body>

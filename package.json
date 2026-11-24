@@ -7,8 +7,56 @@
     "start:web": "python3 server/app.py 3888",
     "start": "electron .",
     "scan": "python3 bin/scan.py .",
-    "clean:dry": "python3 bin/clean.py --dry-run"
+    "clean:dry": "python3 bin/clean.py --dry-run",
+    "build:win": "electron-builder --win",
+    "pack": "electron-builder --dir",
+    "build": "electron-builder"
   },
-  "keywords": ["disk-space", "analyzer", "cleanup", "developer-tools", "cross-platform", "electron"],
-  "license": "MIT"
+  "keywords": [
+    "disk-space",
+    "analyzer",
+    "cleanup",
+    "developer-tools",
+    "cross-platform",
+    "electron"
+  ],
+  "author": "Samuel J Mathew <samuelj90@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^39.2.5",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.samuelj90.space-explorer",
+    "productName": "Space Explorer",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron-main.js",
+      "package.json",
+      "server/**",
+      "lib/**",
+      "bin/**",
+      "ui/**"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "server/**",
+      "lib/**",
+      "bin/**",
+      "ui/**"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "zip"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
 }

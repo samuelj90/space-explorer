@@ -4,13 +4,19 @@
   "description": "Cross-platform disk space analyzer and expendable artifact cleanup dashboard",
   "main": "electron-main.js",
   "scripts": {
+    "build:ui": "tsc --noEmit && vite build",
+    "prestart:web": "npm run build:ui",
     "start:web": "python3 server/app.py 3888",
+    "prestart": "npm run build:ui",
     "start": "electron .",
     "scan": "python3 bin/scan.py .",
     "clean:dry": "python3 bin/clean.py --dry-run",
-    "build:win": "electron-builder --win --publish never",
-    "pack": "electron-builder --dir",
-    "build": "electron-builder --publish never"
+    "prepare:python": "node scripts/prepare-python.cjs",
+    "build:win": "npm run build:ui && node scripts/prepare-python.cjs win32 x64 && electron-builder --win --x64 --publish never",
+    "build:mac:x64": "npm run build:ui && node scripts/prepare-python.cjs darwin x64 && electron-builder --mac --x64 --publish never",
+    "build:mac:arm64": "npm run build:ui && node scripts/prepare-python.cjs darwin arm64 && electron-builder --mac --arm64 --publish never",
+    "pack": "npm run build:ui && node scripts/prepare-python.cjs && electron-builder --dir",
+    "build": "npm run build:ui && node scripts/prepare-python.cjs && electron-builder --publish never"
   },
   "keywords": [
     "disk-space",
@@ -22,9 +28,22 @@
   ],
   "author": "Samuel J Mathew <samuelj90@gmail.com>",
   "license": "MIT",
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
   "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
     "electron": "^39.2.5",
-    "electron-builder": "^26.0.12"
+    "electron-builder": "^26.0.12",
+    "playwright-core": "^1.51.0",
+    "postcss": "^8.5.0",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.7"
   },
   "build": {
     "appId": "com.samuelj90.space-explorer",
@@ -34,18 +53,26 @@
     },
     "files": [
       "electron-main.js",
+      "desktop/**",
       "package.json",
       "server/**",
       "lib/**",
       "bin/**",
-      "ui/**"
+      "ui-dist/**"
     ],
     "asar": true,
+    "extraResources": [
+      {
+        "from": ".runtime/python",
+        "to": "python",
+        "filter": ["**/*", "!**/*.pdb"]
+      }
+    ],
     "asarUnpack": [
       "server/**",
       "lib/**",
       "bin/**",
-      "ui/**"
+      "ui-dist/**"
     ],
     "win": {
       "target": [

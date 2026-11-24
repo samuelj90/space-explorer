@@ -1,5 +1,6 @@
 import sys
 import json
+import os
 import urllib.parse
 from pathlib import Path
 from http.server import SimpleHTTPRequestHandler
@@ -18,8 +19,8 @@ from lib.rules import (
     save_user_rules,
 )
 
-UI_DIR = ROOT_DIR / "ui"
-DEFAULT_WORKSPACE = ROOT_DIR.parent.resolve()
+UI_DIR = Path(os.environ.get("SPACE_EXPLORER_UI_DIR", ROOT_DIR / "ui-dist")).resolve()
+DEFAULT_WORKSPACE = Path(os.environ.get("SPACE_EXPLORER_WORKSPACE", ROOT_DIR.parent)).resolve()
 
 
 class SpaceExplorerHandler(SimpleHTTPRequestHandler):
@@ -177,8 +178,10 @@ def run_server(port=3888):
     server_address = ("127.0.0.1", port)
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(server_address, SpaceExplorerHandler) as httpd:
-        print(f"Space Explorer Server running at http://127.0.0.1:{port}")
-        print(f"Bound workspace: {DEFAULT_WORKSPACE}")
+        actual_port = httpd.server_address[1]
+        print(f"SPACE_EXPLORER_READY:{actual_port}", flush=True)
+        print(f"Space Explorer Server running at http://127.0.0.1:{actual_port}", flush=True)
+        print(f"Bound workspace: {DEFAULT_WORKSPACE}", flush=True)
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
